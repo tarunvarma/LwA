@@ -1,0 +1,137 @@
+
+NOTE: This is sample code to generate Sandbox Billing Agreement using a Test Customer Account. You will need to change the following values:
+   *** At line#16 Replace "amzn1.application-oa2-client.axxxxxxxxxxxxxx123456789xxxxxxxx" with your ClientID
+   *** At lines# 22,35,65 and 91 Replace "ABCDEFGHIJKLM6" with your MerchantID
+To run this sample HTML page - input the IDs mentioned aboce and host as a simple webpage. Also, whitelist your https://domainname in the Login with Amazon Application
+-->
+
+<html>
+  <head>
+    <script type='text/javascript'>
+      window.onAmazonLoginReady = function() {
+        amazon.Login.setClientId('amzn1.application-oa2-client.a994b7f9e8bf46de9afc8b1504674d61');
+        // *** Please replace with your Client ID ***
+      };
+    </script>
+    
+    <!-- this is the sandbox URL for Widgets.js -->
+    <script type='text/javascript' src='https://static-na.payments-amazon.com/OffAmazonPayments/us/sandbox/js/Widgets.js?sellerId=A347IBEN4B3IQV'>
+       // *** Please replace with your Merchant ID ***
+    </script>
+     
+  </head>
+  <body>
+    
+    <h2>Generate Sandbox Billing Agreements</h2>
+    <p>Please use your Sandbox Test Account to login</p>
+    <div id="AmazonPay"></div>
+    <script type="text/javascript">
+      var authRequest;
+      OffAmazonPayments.Button("AmazonPay", "A347IBEN4B3IQV", {   // *** Please replace with your Merchant ID ***
+        type:  "PwA",
+        color: "Gold",
+        size:  "medium",
+        useAmazonAddressBook: true,
+        authorization: function() {
+          var loginOptions = {scope: 'profile payments:billing_address payments:widget'};
+          authRequest = amazon.Login.authorize(loginOptions, function () {
+            renderWidgets();
+          });
+        },
+        onError: function(error) {
+          // Write your custom error handling
+        }
+      });
+    </script>
+
+    <hr/>
+    <h4>Wallet and Consent Widgets</h4>
+    <div id="walletWidgetDiv"></div>
+    <div id="consentContainerDiv" style="display:none">
+      <div id="consentWidgetDiv"></div>
+      <p><font size="small">Please make sure you check the Consent Checkbox before using the Billing Agreement ID</font></p>
+    </div>
+    <script type="text/javascript">
+      var amazonBillingAgreementId = null;
+      function renderWidgets() {
+        
+        new OffAmazonPayments.Widgets.Wallet({
+          sellerId: 'A347IBEN4B3IQV',
+          design: {
+            size: {width:'400px', height:'260px'}
+          },
+          agreementType: 'BillingAgreement',
+          onReady: function(contract) {
+            amazonBillingAgreementId = contract.getAmazonBillingAgreementId();
+            document.getElementById("BA_ID").value = amazonBillingAgreementId;
+          },
+          onPaymentSelect: function(orderReference) {
+            // Display your custom complete purchase button
+            renderConsent();
+          },
+          onError: function(error) {
+            // custom error handling logic
+            widgetError('wallet',error);
+          }
+        }).bind("walletWidgetDiv");
+      }
+      function renderConsent() {
+        
+        document.getElementById("consentContainerDiv").style.display="block";
+        
+        new OffAmazonPayments.Widgets.Consent({
+          sellerId: 'A347IBEN4B3IQV',
+          // amazonBillingAgreementId obtained from the Amazon Address Book widget. 
+          amazonBillingAgreementId: amazonBillingAgreementId, 
+          design: {
+            size: {width:'400px', height:'260px'}
+          },
+          onReady: function(billingAgreementConsentStatus){
+            // Called after widget renders
+            //buyerBillingAgreementConsentStatus =
+            //  billingAgreementConsentStatus.getConsentStatus();
+            console.log(billingAgreementConsentStatus);
+            // getConsentStatus returns true or false
+            // true – checkbox is selected
+            // false – checkbox is unselected - default
+          },
+          onConsent: function(billingAgreementConsentStatus) {
+            buyerBillingAgreementConsentStatus =
+              billingAgreementConsentStatus.getConsentStatus();
+            // getConsentStatus returns true or false
+            // true – checkbox is selected – buyer has consented
+            // false – checkbox is unselected – buyer has not consented
+        
+            // Replace this code with the action that you want to perform
+            // after the consent checkbox is selected/unselected.
+           },
+          onError: function(error) {
+            // your error handling code
+            widgetError('consent',error);
+           }
+        }).bind("consentWidgetDiv");
+      }
+      function widgetError (whichWidget, error) {
+        alert("The following error occurred while rendering the " + whichWidget + " widget: " + error.getErrorMessage());
+      }
+    </script>
+    
+    <div>
+      <p/>
+      Copy your <b>Sandbox Billing Agreement ID</b> here:
+      <input type="text" id="BA_ID" value="none" />
+      
+    </div>
+    <br/>
+
+    <a href="./Generate-AmazonPay-Sandbox-BillingAgreement.html" onclick="logout(); return true;">Logout and Reload the page</a>
+
+    <script>
+      function logout() {
+        amazon.Login.logout();
+      }
+      
+    </script>
+    
+  </body>
+</html>
